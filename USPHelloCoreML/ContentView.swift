@@ -71,6 +71,8 @@ struct ContentView: View {
                     print(error.localizedDescription)
                 }
             }.buttonStyle(.borderedProminent)
+            
+            ObservationListView(observations: detectedObjects)
         }
         .onChange(of: selectedPhotoItem) { _, selectedPhotoItem in
             selectedPhotoItem?.loadTransferable(type: Data.self, completionHandler: { result in
