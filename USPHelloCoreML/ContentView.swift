@@ -25,12 +25,26 @@ struct ContentView: View {
     let model = try! YOLOv3Tiny(configuration: MLModelConfiguration())
     @State private var detectedObjects: [Observation] = []
     
+    private var overlayView: some View {
+        GeometryReader { geometry in
+            Path { path in
+                for observation in detectedObjects {
+                    let rect = VNImageRectForNormalizedRect(observation.boundingBox, Int(geometry.size.width), Int(geometry.size.height))
+                    let cgRect = CGRect(x: rect.origin.x, y: geometry.size.height - rect.origin.y - rect.size.height, width: rect.size.width, height: rect.size.height)
+                    path.addRect(cgRect)
+                }
+            }
+            .stroke(Color.red, lineWidth: 2)
+        }
+    }
+    
     var body: some View {
         VStack {
             Image(uiImage: uiImage!)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 300, height: 300)
+                .overlay(overlayView)
                 
             HStack {
                 PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
@@ -75,6 +89,7 @@ struct ContentView: View {
             ObservationListView(observations: detectedObjects)
         }
         .onChange(of: selectedPhotoItem) { _, selectedPhotoItem in
+            detectedObjects = []
             selectedPhotoItem?.loadTransferable(type: Data.self, completionHandler: { result in
                 print(result)
                 switch result {
